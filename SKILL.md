@@ -5,7 +5,7 @@ description: Use when the user wants to replicate, reimplement, port, or study a
 
 # Project Replica C++ Port
 
-Guide replica projects as a documented, incremental port rather than a one-off explanation. Preserve reusable context in repo docs, read those docs on every use, and favor a C++ architecture that separates business/application logic from hardware-specific adapters.
+Guide replica projects as a documented, incremental port rather than a one-off explanation. Preserve reusable context in repo docs, read those docs on every use, and favor a C++ architecture where application/domain behavior is decoupled from hardware, OS, middleware, and vendor-generated code. Treat directory names as flexible conventions; preserve the separation of responsibilities.
 
 ## First Step
 
@@ -52,7 +52,7 @@ docs/handoff/YYYY-MM-DD_HHMM_handoff.md
   Per-session handoff containing decisions, changed files, verified commands, blockers, and next steps.
 ```
 
-For detailed templates and the recommended C++ layout, read `references/replica-docs-and-cpp-layout.md` when creating or updating these docs.
+For detailed templates and embedded C++ architecture options, read `references/replica-docs-and-cpp-layout.md` when creating or updating these docs.
 
 ## Analysis Workflow
 
@@ -68,35 +68,37 @@ If the user asks for teaching or step-by-step guidance, explain the next step pl
 
 ## C++ Porting Architecture
 
-Prefer this separation unless the existing project strongly suggests a better local convention:
+Prefer this responsibility separation unless the existing project strongly suggests a better local convention. Names are examples, not requirements:
 
 ```text
-UserApp/ or App/
+Application layer
   Application entry points, task orchestration, user-facing behavior, high-level robot modes.
 
-Ctrl/ or Domain/
+Domain/control layer
   Hardware-independent control logic, state machines, algorithms, motor/chassis/sensor abstractions.
 
-Interface/
+Interface/contract layer
   Pure interfaces and shared data types: bus interfaces, sensor base classes, protocol frames, DTOs.
 
-Port/ or Platform/
-  Hardware compatibility layer: STM32/Arduino/Linux/ROS adapters, HAL calls, serial/CAN/SPI/I2C implementations.
+Platform/adapter layer
+  Hardware, OS, middleware, and board compatibility: STM32/Arduino/Linux/ROS adapters, HAL calls, serial/CAN/SPI/I2C implementations.
 
-Core/ or Generated/
-  Vendor-generated startup/HAL/CubeMX files. Keep isolated and avoid mixing domain logic here.
+BSP/HAL/generated layer
+  Vendor startup files, CubeMX/HAL code, board pin configuration, linker scripts, RTOS setup. Keep isolated and avoid mixing domain logic here.
 
-Tests/ or Sim/
+Tests/simulation layer
   Host-side tests, fake ports, simulation harnesses, protocol replay, regression checks.
 ```
 
 Dependency direction must point inward:
 
 ```text
-UserApp -> Ctrl -> Interface <- Port -> Core/HAL
+Application -> Domain -> Interfaces <- Platform -> BSP/HAL/generated code
 ```
 
-`Ctrl` may depend on `Interface`, but not on `Port`, `Core`, HAL headers, board pins, or vendor generated code. `Port` implements interfaces and translates to hardware APIs. This keeps later hardware replacement cheap.
+The domain/control layer may depend on interfaces, but not on platform adapters, HAL headers, board pins, ROS nodes, Arduino globals, Linux device paths, or vendor generated code. Platform adapters implement interfaces and translate to concrete hardware or middleware APIs. This keeps later hardware replacement cheap.
+
+Accept existing names when they carry the same responsibilities. Examples include `UserApp`, `App`, `Ctrl`, `Domain`, `Interface`, `Port`, `Platform`, `Core`, `BSP`, `Drivers`, `Generated`, `Sim`, or `Tests`. Do not rename a working project just to match this skill.
 
 When source project code is in another language, translate behavior and contracts before translating syntax. Preserve protocols, message fields, timing assumptions, state transitions, error handling, and calibration semantics in docs.
 
@@ -125,4 +127,3 @@ Verified commands
 Known issues and assumptions
 Next recommended steps
 ```
-
