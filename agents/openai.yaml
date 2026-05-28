@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Replica C++ Port"
+  short_description: "Replica-project workflow with C++ layered porting docs"
+  default_prompt: "Use this skill to analyze a source project, maintain replica documentation, and guide a C++ layered port with application logic separated from hardware compatibility layers."
